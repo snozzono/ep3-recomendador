@@ -1,0 +1,28 @@
+Archivo: D:\mhigu\Desktop\clases\Arquitectura de sistemas IA 002D\material nota 3\EP3\datos\Industrial_and_Scientific.csv
+Filas cargadas: 412947
+Usuarios unicos (crudo): 50985
+Items unicos (crudo): 25848
+Pares usuario-item duplicados eliminados: 0
+Filtro k-core (>= 5 por usuario e item): 1 ronda(s), el archivo ya era 5-core asi que no deberia quitar filas
+Tras filtro: usuarios=50985, items=25848, interacciones=412947
+Densidad: 0.031335%
+Matriz densa float64 costaria 10.54 GB -> se usa scipy.sparse (CSR)
+Split aleatorio 80/20 (semilla 42): train=330358, test=82589
+Usuarios en test sin ninguna interaccion en train: 9
+Items en test sin ninguna interaccion en train: 1
+Media global de train: 4.4512
+SVD (scipy svds, k=32) sobre matriz train con ceros en no observados
+Valores singulares: max=198.7593, min=74.3120
+
+== RMSE (sobre todas las interacciones de test) ==
+Media global: 1.0815
+SVD (sin recorte):   4.5579
+SVD (recortado 1-5): 3.6118
+
+== Ranking (Precision@5) ==
+Usuarios evaluados (con >=1 item relevante en test, rating>=4.0): 36454
+Relevantes en test: 71052
+Candidatos: items no vistos por el usuario en train
+Precision@5 SVD:        0.0061
+Precision@5 Popularidad:0.0046
+Tiempo total: 28.6 s

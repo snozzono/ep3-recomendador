@@ -1,0 +1,33 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+
+  api:
+    build: ./servicio
+    ports:
+      - "8000:8000"
+    environment:
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+      MODEL_PATH: /modelo/modelo.npz
+    volumes:
+      - ./modelo:/modelo:ro
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  consumidor:
+    build: ./servicio
+    command: python consumidor.py
+    environment:
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+    depends_on:
+      rabbitmq:
+        condition: service_healthy

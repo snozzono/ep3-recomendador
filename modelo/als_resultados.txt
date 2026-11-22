@@ -1,0 +1,15 @@
+Archivo: D:\mhigu\Desktop\clases\Arquitectura de sistemas IA 002D\material nota 3\EP3\datos\Industrial_and_Scientific.csv
+Filas cargadas: 412947
+Tras filtro: usuarios=50985, items=25848, interacciones=412947
+Split aleatorio 80/20 (semilla 42): train=330358, test=82589
+ALS implicit: factors=32, regularization=0.01 (defecto), iterations=15 (defecto), confianza = rating de train
+Entrenamiento ALS: 2.0 s
+
+== Ranking (Precision@5) ==
+Usuarios evaluados (con >=1 item relevante en test, rating>=4.0): 36454
+Relevantes en test: 71052
+Candidatos: items no vistos por el usuario en train
+Precision@5 ALS (implicit, 32 factores): 0.0100
+Precision@5 Popularidad:  0.0046
+ALS supera a popularidad: SI
+Tiempo total: 28.8 s

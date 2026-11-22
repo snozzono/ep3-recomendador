@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+.pytest_cache/
+servicio/eventos.jsonl
+datos/
+*.csv
+*.jsonl
+*.zip
+modelo/*.npz
+modelo/modelo.npz
+*.pdf
