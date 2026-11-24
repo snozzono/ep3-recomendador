@@ -10,3 +10,5 @@ datos/
 modelo/*.npz
 modelo/modelo.npz
 *.pdf
+herramientas/EP3_*.html
+herramientas/_pres/
