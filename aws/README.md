@@ -111,4 +111,4 @@ Verificación posterior: `bash 00_verificar.sh` debe marcar FALTA en Lambda y AP
 ## Notas
 
 - La API devuelve `parent_asin`, no nombres de producto. Los nombres requieren `meta_Industrial_and_Scientific`, no descargado.
-- El repo está marcado **FAULTY** en el README principal: el paso 2 con el fix `-k/--k` aún no se ha confirmado como `Completed`.
+- Paso 2 verificado: el job `ep3-svd-2026-11-24-15-45-45-251` está `Completed` (fix `-k/--k` aplicado). API ID actual: `5uli1pw7qf`.

@@ -146,13 +146,15 @@ def main() -> int:
     )
 
     # 3) Referencias: los parrafos entre el titulo 9 y el titulo 10 reciben la
-    #    clase .ref (sangria francesa APA). Se hace aqui y no en el Markdown
+    #    clase .ref (sangria francesa APA), desde el encabezado "N. Referencias"
+    #    (h1 o h2) hasta el siguiente encabezado. Se hace aqui y no en el Markdown
     #    porque un <div> contenedor impide que Markdown genere los <p>.
-    i = body.find("<h1>9. Referencias</h1>")
-    j = body.find("<h1>10.")
-    if i != -1 and j > i:
-        bloque = body[i:j].replace("<p>", '<p class="ref">')
-        body = body[:i] + bloque + body[j:]
+    m_ref = re.search(r"<h[12]>\d+\. Referencias</h[12]>", body)
+    if m_ref:
+        m_fin = re.search(r"<h[12]>", body[m_ref.end():])
+        j = m_ref.end() + m_fin.start() if m_fin else len(body)
+        bloque = body[m_ref.start():j].replace("<p>", '<p class="ref">')
+        body = body[:m_ref.start()] + bloque + body[j:]
 
     # 4) Tablas cortas: no se parten entre paginas (evita la fila huerfana).
     def _no_partir(m):
