@@ -31,8 +31,9 @@ python3 02_run.py
 
 echo "=== PASO 3: publicar modelo"
 bash 03_publicar_modelo.sh
-MODEL_KEY=$(aws s3 ls s3://ep2-equipo1-128688195152/modelos/ | awk '{print $4}' | sort | tail -1)
-export MODEL_KEY="modelos/$MODEL_KEY"
+MODEL_KEY=$(aws s3api list-objects-v2 --bucket ep2-equipo1-128688195152 --prefix modelos/ \
+  --query 'sort_by(Contents,&LastModified)[-1].Key' --output text --region $REGION)
+export MODEL_KEY
 echo "MODEL_KEY=$MODEL_KEY"
 
 echo "=== PASO 4: Lambda y API"
