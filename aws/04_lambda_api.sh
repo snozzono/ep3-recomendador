@@ -3,6 +3,7 @@
 #
 # ADVERTENCIA: si API_ID no se define, cada ejecucion CREA una API nueva (cobra y deja basura).
 # Tras la primera ejecucion, exportar el API_ID impreso: export API_ID=xxxx
+# API_KEY es obligatoria: la Lambda exige la cabecera X-API-Key con ese mismo valor (usar solo caracteres sin comillas ni barras invertidas).
 set -euo pipefail
 
 BUCKET=ep2-equipo1-128688195152
@@ -14,6 +15,7 @@ RUTA="GET /recomendar"
 
 MODEL_KEY="${MODEL_KEY:-}"
 API_ID="${API_ID:-}"
+API_KEY="${API_KEY:?definir API_KEY=<misma clave que en .env local>}"
 
 if [[ -z "$MODEL_KEY" ]]; then
   MODEL_KEY=$(aws s3api list-objects-v2 --bucket "$BUCKET" --prefix modelos/ \
@@ -34,6 +36,7 @@ python3 -m pip install --quiet --target "$TMP/pkg" --platform manylinux2014_x86_
   --implementation cp --python-version 3.12 --only-binary=:all: numpy
 
 cat > "$TMP/pkg/lambda_function.py" <<'PYEOF'
+import hmac
 import io
 import json
 import os
@@ -43,6 +46,14 @@ import numpy as np
 
 s3 = boto3.client("s3")
 _modelo = None
+
+
+def _autorizado(event):
+    esperada = os.environ.get("API_KEY", "")
+    recibida = ((event or {}).get("headers") or {}).get("x-api-key", "")
+    if not esperada or not recibida:
+        return False
+    return hmac.compare_digest(recibida.encode("utf-8"), esperada.encode("utf-8"))
 
 
 def _cargar():
@@ -70,6 +81,8 @@ def _respuesta(code, cuerpo):
 
 
 def lambda_handler(event, context):
+    if not _autorizado(event):
+        return _respuesta(401, {"error": "no autorizado"})
     usuario = ((event or {}).get("queryStringParameters") or {}).get("usuario", "").strip()
     if not usuario:
         return _respuesta(400, {"error": "falta el parametro usuario"})
@@ -80,14 +93,15 @@ def lambda_handler(event, context):
     puntajes = m["V"] @ m["U"][i]
     vistos = m["indices"][m["indptr"][i]:m["indptr"][i + 1]]
     puntajes[vistos] = -np.inf
-    top = np.argsort(-puntajes)[:10]
+    disponibles = np.flatnonzero(np.isfinite(puntajes))
+    top = disponibles[np.argsort(-puntajes[disponibles], kind="stable")][:10]
     recs = [{"parent_asin": str(m["item_ids"][j]), "score": float(puntajes[j])} for j in top]
     return _respuesta(200, {"usuario": usuario, "recomendaciones": recs})
 PYEOF
 
 (cd "$TMP/pkg" && zip -qr "$TMP/fn.zip" .)
 
-VARS="Variables={BUCKET=$BUCKET,MODEL_KEY=$MODEL_KEY}"
+VARS=$(printf '{"Variables":{"BUCKET":"%s","MODEL_KEY":"%s","API_KEY":"%s"}}' "$BUCKET" "$MODEL_KEY" "$API_KEY")
 
 if aws lambda get-function --function-name "$FN" --region "$REGION" >/dev/null 2>&1; then
   echo "Actualizando Lambda $FN"
@@ -146,4 +160,5 @@ fi
 
 # Punto de control: probar con un usuario real del dataset
 echo "URL: https://$API_ID.execute-api.$REGION.amazonaws.com/recomendar?usuario=USUARIO_REAL"
-echo "Prueba: curl \"https://$API_ID.execute-api.$REGION.amazonaws.com/recomendar?usuario=USUARIO_REAL\""
+echo "Prueba: curl -H \"X-API-Key: \$API_KEY\" \"https://$API_ID.execute-api.$REGION.amazonaws.com/recomendar?usuario=USUARIO_REAL\""
+echo "Sin clave debe responder 401."

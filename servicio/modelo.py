@@ -71,10 +71,11 @@ class Recomendador:
         puntajes = self.V @ self.U[fila]
         vistos = self.productos_vistos(usuario)
         puntajes[vistos] = -np.inf
-        n = min(n, self.n_productos - len(np.unique(vistos)))
+        disponibles = np.flatnonzero(np.isfinite(puntajes))
+        n = min(n, disponibles.size)
         if n == 0:
             return []
-        top = np.argpartition(-puntajes, n - 1)[:n]
+        top = disponibles[np.argpartition(-puntajes[disponibles], n - 1)[:n]]
         top = top[np.argsort(-puntajes[top], kind="stable")]
         return [{"parent_asin": str(self.item_ids[j]), "score": float(puntajes[j])} for j in top]
 

@@ -1,0 +1,43 @@
+{
+  "fuente": "modelo/metricas_clasificacion_resultados.txt",
+  "datos": {
+    "filas_cargadas": 412947,
+    "usuarios": 50985,
+    "items": 25848,
+    "train": 330358,
+    "test": 82589,
+    "usuarios_evaluados": 36454,
+    "positivos_test": 71052,
+    "candidatos_evaluados": 942019848,
+    "tiempo_entrenamiento_s": 39.4,
+    "tiempo_total_s": 84.3
+  },
+  "modelos": [
+    {
+      "nombre": "ALS (factorización)",
+      "tp": 1836,
+      "fp": 180434,
+      "fn": 69216,
+      "tn": 941768362,
+      "accuracy": 0.999735,
+      "precision": 0.010073,
+      "recall": 0.025840,
+      "f1": 0.014495,
+      "precision_at_5": 0.0101,
+      "recall_at_5": 0.0269
+    },
+    {
+      "nombre": "Popularidad (línea base)",
+      "tp": 835,
+      "fp": 181435,
+      "fn": 70217,
+      "tn": 941767361,
+      "accuracy": 0.999733,
+      "precision": 0.004581,
+      "recall": 0.011752,
+      "f1": 0.006592,
+      "precision_at_5": 0.0046,
+      "recall_at_5": 0.0125
+    }
+  ]
+}

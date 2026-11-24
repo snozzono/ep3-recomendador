@@ -1,11 +1,13 @@
 import json
+import math
 
 import numpy as np
 import pytest
 from fastapi.testclient import TestClient
 
 from app import crear_app
-from conftest import CLAVE, N_PRODUCTOS, N_USUARIOS
+from conftest import CLAVE, N_PRODUCTOS, N_USUARIOS, N_VISTOS
+from modelo import Recomendador
 
 INTERACCION_VALIDA = {
     "usuario": "u3",
@@ -73,6 +75,16 @@ def test_rate_limit_responde_429_con_retry_after(recomendador, publicador):
     assert int(r.headers["Retry-After"]) >= 1
 
 
+def test_rate_limit_cuenta_401_y_otras_rutas(recomendador, publicador):
+    limite = 5
+    cliente = TestClient(crear_app(recomendador=recomendador, publicador=publicador, api_key=CLAVE, limite_por_minuto=limite))
+    assert cliente.get("/salud").status_code == 200
+    assert cliente.get("/recomendar", params={"usuario": "u3", "n": 1}).status_code == 401
+    for _ in range(limite - 2):
+        assert cliente.get("/recomendar", params={"usuario": "u3", "n": 1}, headers={"X-API-Key": CLAVE}).status_code == 200
+    assert cliente.get("/recomendar", params={"usuario": "u3", "n": 1}, headers={"X-API-Key": CLAVE}).status_code == 429
+
+
 def test_recomendar_usuario_valido_devuelve_estructura(client, recomendador_directo):
     r = client.get("/recomendar", params={"usuario": "u3", "n": 5})
     assert r.status_code == 200
@@ -137,6 +149,41 @@ def test_recomendar_n_menor_que_total_devuelve_los_mejores(client, recomendador_
 def test_recomendar_n_mayor_que_catalogo_no_falla(client, recomendador_directo):
     recs = client.get("/recomendar", params={"usuario": "u0", "n": 100}).json()["recomendaciones"]
     assert len(recs) == N_PRODUCTOS - len(recomendador_directo.productos_vistos("u0"))
+
+
+def json_estandar(texto):
+    def rechazar(constante):
+        raise ValueError(f"JSON no estándar: {constante}")
+
+    return json.loads(texto, parse_constant=rechazar)
+
+
+def test_recomendar_solo_scores_finitos_y_json_estandar(client):
+    for usuario in [f"u{i}" for i in range(N_USUARIOS)]:
+        r = client.get("/recomendar", params={"usuario": usuario, "n": 100})
+        assert r.status_code == 200
+        cuerpo = json_estandar(r.text)
+        assert all(math.isfinite(rec["score"]) for rec in cuerpo["recomendaciones"])
+        assert len(cuerpo["recomendaciones"]) == N_PRODUCTOS - N_VISTOS
+
+
+def test_recomendar_con_pocos_no_vistos_omite_los_vistos(recomendador_directo, publicador):
+    vistos = np.arange(N_PRODUCTOS - 2)
+    recomendador = Recomendador(
+        recomendador_directo.U,
+        recomendador_directo.V,
+        np.array([0, len(vistos)] + [len(vistos)] * (N_USUARIOS - 1), dtype=np.int64),
+        vistos.astype(np.int32),
+        np.array([f"u{i}" for i in range(N_USUARIOS)], dtype=str),
+        recomendador_directo.item_ids,
+    )
+    cliente = TestClient(crear_app(recomendador=recomendador, publicador=publicador, api_key=CLAVE), headers={"X-API-Key": CLAVE})
+    r = cliente.get("/recomendar", params={"usuario": "u0", "n": 10})
+    assert r.status_code == 200
+    recs = json_estandar(r.text)["recomendaciones"]
+    assert len(recs) == 2
+    assert all(math.isfinite(rec["score"]) for rec in recs)
+    assert {rec["parent_asin"] for rec in recs} == {"p48", "p49"}
 
 
 def test_recomendar_excluye_productos_vistos(client, recomendador_directo):
@@ -210,6 +257,17 @@ def test_dashboard_sirve_html(client):
     assert r.status_code == 200
     assert r.headers["content-type"].startswith("text/html")
     assert "/recomendar" in r.text
+
+
+def test_dashboard_carga_metricas_y_carga_estaticas(client_sin_clave):
+    html = client_sin_clave.get("/dashboard").text
+    assert "/static/metricas.json" in html and "/static/carga.json" in html
+    metricas = client_sin_clave.get("/static/metricas.json")
+    assert metricas.status_code == 200
+    assert len(metricas.json()["modelos"]) == 2
+    carga = client_sin_clave.get("/static/carga.json")
+    assert carga.status_code == 200
+    assert carga.json()["tiempos_ms_y_rps"][-1]["endpoint"] == "Agregado"
 
 
 def test_fallback_sin_modelo_arranca_con_popularidad(monkeypatch, tmp_path, publicador):

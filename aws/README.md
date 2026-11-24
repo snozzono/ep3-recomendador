@@ -7,7 +7,7 @@ Cuenta `128688195152` · bucket `ep2-equipo1-128688195152` · rol `LabRole` · i
 ## Paso 0 · Preparar el entorno
 
 ```bash
-bash <(curl -sL https://raw.githubusercontent.com/snozzono/ep3-recomendador/main/aws/00_preparar.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/snozzono/ep3-recomendador/main/aws/00_preparar.sh)
 ```
 
 Si falla, clona a mano: `git clone https://github.com/snozzono/ep3-recomendador.git ~/ep3 && bash ~/ep3/aws/00_preparar.sh`
@@ -51,14 +51,18 @@ bash 03_publicar_modelo.sh
 
 ## Paso 4 · Lambda y API Gateway
 
+La API exige la misma clave que el servicio local (cabecera `X-API-Key`). Definirla antes de correr el script (si falta, el script se detiene):
+
 ```bash
+export API_KEY=<misma clave que en .env local>
 bash 04_lambda_api.sh
 ```
 
-La primera vez crea la API `ep3-recomendador-api` y avisa el `API_ID`. Exporta el id y vuelve a correr para actualizar sin crear otra API:
+La primera vez crea la API `ep3-recomendador-api` y avisa el `API_ID`. Exporta el id y vuelve a correr para actualizar sin crear otra API (la Lambda recibe de nuevo el código y la variable `API_KEY`):
 
 ```bash
 export API_ID=<id impreso>
+export API_KEY=<misma clave que en .env local>
 bash 04_lambda_api.sh
 ```
 
@@ -66,10 +70,12 @@ bash 04_lambda_api.sh
 
 ```bash
 URL="https://$API_ID.execute-api.us-east-1.amazonaws.com/recomendar"
-curl -s -o /dev/null -w "%{http_code}\n" "$URL?usuario=<ID_EXISTENTE>"   # esperado 200
-curl -s -o /dev/null -w "%{http_code}\n" "$URL?usuario=999999999"        # esperado 404
-curl -s -o /dev/null -w "%{http_code}\n" "$URL"                           # esperado 400
+curl -s -o /dev/null -w "%{http_code}\n" "$URL?usuario=<ID_EXISTENTE>"                        # esperado 401 (sin clave)
+curl -s -o /dev/null -w "%{http_code}\n" -H "X-API-Key: $API_KEY" "$URL?usuario=<ID_EXISTENTE>" # esperado 200
+curl -s -o /dev/null -w "%{http_code}\n" -H "X-API-Key: $API_KEY" "$URL?usuario=999999999"      # esperado 404
 ```
+
+Si la clave es incorrecta o no se envía, responde 401 `{"error":"no autorizado"}`. Sin `usuario` con clave válida, responde 400.
 
 Logs: CloudWatch `/aws/lambda/ep3-recomendador`.
 

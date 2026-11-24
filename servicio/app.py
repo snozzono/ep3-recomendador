@@ -10,6 +10,7 @@ from pathlib import Path
 from fastapi import Depends, FastAPI, HTTPException, Query, Request, Security
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.security import APIKeyHeader
+from fastapi.staticfiles import StaticFiles
 
 from mensajeria import PublicadorRabbit
 from modelo import UsuarioNoEncontrado, cargar_recomendador
@@ -140,6 +141,8 @@ def crear_app(recomendador=None, publicador=None, api_key=None, limite_por_minut
             log.exception("No se pudo publicar la interacción del usuario %s", evento.usuario)
             raise HTTPException(status_code=503, detail="No se pudo registrar la interacción; intente más tarde")
         return {"estado": "aceptado"}
+
+    app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
     return app
 

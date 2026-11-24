@@ -3,96 +3,258 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Recomendador de productos</title>
+  <title>Recomendador de productos · demo</title>
   <style>
-    body { font-family: system-ui, sans-serif; margin: 2rem auto; max-width: 720px; padding: 0 1rem; color: #222; }
-    h1 { font-size: 1.4rem; }
-    .salud { font-size: 0.9rem; margin-bottom: 1.5rem; }
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; margin: 0; background: #f6f7f9; color: #222; }
+    header, main { max-width: 1000px; margin: 0 auto; padding: 0 1rem; }
+    header { padding-top: 1.25rem; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem; }
+    h1 { font-size: 1.4rem; margin: 0; }
+    h2 { font-size: 1.05rem; margin: 0 0 0.75rem; }
+    section { background: #fff; border: 1px solid #e2e4e8; border-radius: 8px; padding: 1rem; margin: 1rem 0; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1rem; }
+    @media (max-width: 720px) { .grid { grid-template-columns: 1fr; } }
+    form { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+    label { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; width: 100%; }
+    input { padding: 0.45rem; font-size: 0.95rem; border: 1px solid #c8ccd2; border-radius: 4px; min-width: 0; }
+    input[type=text], input[type=password] { flex: 1 1 180px; }
+    input[type=number] { width: 6rem; }
+    button { padding: 0.45rem 0.9rem; font-size: 0.95rem; cursor: pointer; border: 1px solid #1d4ed8; background: #1d4ed8; color: #fff; border-radius: 4px; }
+    .tabla-scroll { overflow-x: auto; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+    th, td { border-bottom: 1px solid #e5e7eb; padding: 0.35rem 0.5rem; text-align: left; white-space: nowrap; }
+    th { background: #f3f4f6; }
+    td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+    .mensaje { margin: 0.6rem 0; min-height: 1.2rem; font-size: 0.9rem; }
     .ok { color: #1a7f37; font-weight: 600; }
     .error { color: #b42318; font-weight: 600; }
-    form { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
-    input[type=text], input[type=password] { flex: 1; padding: 0.5rem; font-size: 1rem; }
-    input[type=number] { width: 4.5rem; padding: 0.5rem; font-size: 1rem; }
-    button { padding: 0.5rem 1rem; font-size: 1rem; cursor: pointer; }
-    table { border-collapse: collapse; width: 100%; }
-    th, td { border-bottom: 1px solid #ddd; padding: 0.4rem 0.6rem; text-align: left; }
-    th { background: #f5f5f5; }
-    td.num { text-align: right; font-variant-numeric: tabular-nums; }
-    #mensaje { margin: 0.75rem 0; min-height: 1.2rem; }
+    .estado { display: inline-block; padding: 0.2rem 0.7rem; border-radius: 999px; font-weight: 600; background: #e5e7eb; }
+    .estado.ok { background: #dcfce7; color: #1a7f37; }
+    .estado.error { background: #fee2e2; color: #b42318; }
+    .nota { color: #555; font-size: 0.85rem; margin: 0.5rem 0 0; }
   </style>
 </head>
 <body>
-  <h1>Recomendador de productos</h1>
-  <div class="salud">Estado del servicio: <span id="salud">consultando…</span></div>
+  <header>
+    <h1>Recomendador de productos</h1>
+    <div>Estado del servicio: <span id="salud" class="estado">consultando…</span></div>
+  </header>
 
-  <form id="formulario">
-    <input type="password" id="clave" placeholder="Clave API (X-API-Key)" autocomplete="off" required>
-    <input type="text" id="usuario" placeholder="user_id, p. ej. AFNT6ZJCYQN3WDIKUSWHJDXNND2Q" required>
-    <input type="number" id="n" value="5" min="1" max="100" title="Cantidad de recomendaciones (1-100)">
-    <button type="submit">Recomendar</button>
-  </form>
+  <main>
+    <section>
+      <form onsubmit="return false">
+        <label>Clave API (cabecera X-API-Key, usada en los paneles 2 y 3):
+          <input type="password" id="clave" autocomplete="off">
+        </label>
+      </form>
+    </section>
 
-  <div id="mensaje"></div>
-  <table>
-    <thead>
-      <tr><th>#</th><th>parent_asin</th><th class="num">score</th></tr>
-    </thead>
-    <tbody id="resultados"></tbody>
-  </table>
+    <div class="grid">
+      <section>
+        <h2>2. Recomendaciones</h2>
+        <form id="formRecomendar">
+          <input type="text" id="usuario" placeholder="user_id" required>
+          <input type="number" id="n" value="5" min="1" max="100" title="Cantidad (1-100)">
+          <button type="submit">Recomendar</button>
+        </form>
+        <div id="mensajeRecomendar" class="mensaje"></div>
+        <div class="tabla-scroll">
+          <table>
+            <thead><tr><th>#</th><th>parent_asin</th><th class="num">score</th></tr></thead>
+            <tbody id="resultados"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section>
+        <h2>3. Enviar interacción</h2>
+        <form id="formInteraccion">
+          <input type="text" id="iUsuario" placeholder="usuario (user_id)" required>
+          <input type="text" id="iProducto" placeholder="producto (parent_asin)" required>
+          <input type="number" id="iRating" min="1" max="5" step="any" value="5" title="Rating (1-5)" required>
+          <button type="submit">Enviar a POST /interacciones</button>
+        </form>
+        <div id="mensajeInteraccion" class="mensaje"></div>
+        <p class="nota">Respuestas: 202 aceptada y encolada en RabbitMQ · 422 datos inválidos · 401 clave incorrecta · 503 broker caído.</p>
+      </section>
+    </div>
+
+    <section>
+      <h2>4. Métricas del modelo (clasificación, test 80/20)</h2>
+      <p id="metricasDatos" class="nota">Cargando…</p>
+      <div class="tabla-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Modelo</th><th class="num">TP</th><th class="num">FP</th><th class="num">FN</th>
+              <th class="num">Accuracy</th><th class="num">Precision</th><th class="num">Recall</th><th class="num">F1</th>
+              <th class="num">Precision@5</th><th class="num">Recall@5</th>
+            </tr>
+          </thead>
+          <tbody id="tablaMetricas"></tbody>
+        </table>
+      </div>
+      <p id="metricasFuente" class="nota"></p>
+    </section>
+
+    <section>
+      <h2>5. Pruebas de carga (Locust)</h2>
+      <p id="cargaEscenario" class="nota">Cargando…</p>
+      <div class="tabla-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Endpoint</th><th class="num">Peticiones</th><th class="num">Fallos</th>
+              <th class="num">p50 (ms)</th><th class="num">p95 (ms)</th><th class="num">p99 (ms)</th><th class="num">req/s</th>
+            </tr>
+          </thead>
+          <tbody id="tablaCarga"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
 
   <script>
-    const salud = document.getElementById("salud");
-    const mensaje = document.getElementById("mensaje");
-    const tbody = document.getElementById("resultados");
+    const $ = (id) => document.getElementById(id);
 
-    async function cargarSalud() {
-      try {
-        const r = await fetch("/salud");
-        const cuerpo = await r.json();
-        salud.textContent = r.ok ? cuerpo.estado : "HTTP " + r.status;
-        salud.className = r.ok ? "ok" : "error";
-      } catch (e) {
-        salud.textContent = "sin conexión";
-        salud.className = "error";
+    function fila(tbody, valores, numericas) {
+      const tr = document.createElement("tr");
+      valores.forEach((valor, i) => {
+        const td = document.createElement("td");
+        td.textContent = String(valor);
+        if (numericas.includes(i)) td.className = "num";
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    }
+
+    function mostrar(elemento, texto, clase) {
+      elemento.className = "mensaje " + clase;
+      elemento.textContent = texto;
+    }
+
+    function mensajeHttp(status, cuerpo) {
+      const detalle = cuerpo && typeof cuerpo.detail === "string" ? cuerpo.detail : "";
+      switch (status) {
+        case 401: return "Clave API ausente o incorrecta (401). Revise el campo «Clave API».";
+        case 404: return (detalle || "El user_id no existe en el modelo") + " (404).";
+        case 422: return "Datos inválidos (422). Revise los campos.";
+        case 429: return "Demasiadas solicitudes desde esta IP (429). Espere unos segundos y reintente.";
+        case 503: return "RabbitMQ no está disponible (503). Reintente más tarde.";
+        default: return "Error HTTP " + status + (detalle ? ": " + detalle : "");
       }
     }
 
-    document.getElementById("formulario").addEventListener("submit", async (evento) => {
-      evento.preventDefault();
-      const usuario = document.getElementById("usuario").value.trim();
-      const n = document.getElementById("n").value;
-      tbody.replaceChildren();
-      mensaje.className = "";
-      mensaje.textContent = "Consultando…";
+    async function leerJson(r) {
+      try { return await r.json(); } catch (e) { return null; }
+    }
+
+    async function cargarSalud() {
+      const el = $("salud");
       try {
-        const url = "/recomendar?usuario=" + encodeURIComponent(usuario) + "&n=" + encodeURIComponent(n);
-        const clave = document.getElementById("clave").value;
-        const r = await fetch(url, { headers: { "X-API-Key": clave } });
-        const cuerpo = await r.json();
+        const r = await fetch("/salud");
+        const cuerpo = await leerJson(r);
+        const ok = r.ok && cuerpo && cuerpo.estado === "ok";
+        el.textContent = ok ? "OK" : "Error (HTTP " + r.status + ")";
+        el.className = "estado " + (ok ? "ok" : "error");
+      } catch (e) {
+        el.textContent = "Sin conexión";
+        el.className = "estado error";
+      }
+    }
+
+    $("formRecomendar").addEventListener("submit", async (evento) => {
+      evento.preventDefault();
+      const msg = $("mensajeRecomendar");
+      const tbody = $("resultados");
+      tbody.replaceChildren();
+      mostrar(msg, "Consultando…", "");
+      const params = new URLSearchParams({ usuario: $("usuario").value.trim(), n: $("n").value });
+      try {
+        const r = await fetch("/recomendar?" + params.toString(), { headers: { "X-API-Key": $("clave").value } });
+        const cuerpo = await leerJson(r);
         if (!r.ok) {
-          mensaje.className = "error";
-          mensaje.textContent = typeof cuerpo.detail === "string" ? cuerpo.detail : "Error HTTP " + r.status;
+          mostrar(msg, mensajeHttp(r.status, cuerpo), "error");
           return;
         }
-        mensaje.textContent = "Modelo: " + cuerpo.modelo + " · usuario: " + cuerpo.usuario;
-        cuerpo.recomendaciones.forEach((rec, i) => {
-          const fila = document.createElement("tr");
-          const celdas = [String(i + 1), rec.parent_asin, rec.score.toFixed(4)];
-          celdas.forEach((texto, c) => {
-            const td = document.createElement("td");
-            td.textContent = texto;
-            if (c === 2) td.className = "num";
-            fila.appendChild(td);
-          });
-          tbody.appendChild(fila);
-        });
+        mostrar(msg, "Modelo: " + cuerpo.modelo + " · usuario: " + cuerpo.usuario, "ok");
+        cuerpo.recomendaciones.forEach((rec, i) => fila(tbody, [i + 1, rec.parent_asin, rec.score.toFixed(4)], [2]));
       } catch (e) {
-        mensaje.className = "error";
-        mensaje.textContent = "No se pudo consultar el servicio";
+        mostrar(msg, "No se pudo conectar con el servicio", "error");
       }
     });
 
+    $("formInteraccion").addEventListener("submit", async (evento) => {
+      evento.preventDefault();
+      const msg = $("mensajeInteraccion");
+      const interaccion = {
+        usuario: $("iUsuario").value.trim(),
+        producto: $("iProducto").value.trim(),
+        rating: Number($("iRating").value),
+        timestamp: new Date().toISOString(),
+      };
+      mostrar(msg, "Enviando…", "");
+      try {
+        const r = await fetch("/interacciones", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-API-Key": $("clave").value },
+          body: JSON.stringify(interaccion),
+        });
+        if (r.status === 202) {
+          mostrar(msg, "Interacción aceptada (202) y encolada en RabbitMQ.", "ok");
+        } else {
+          mostrar(msg, mensajeHttp(r.status, await leerJson(r)), "error");
+        }
+      } catch (e) {
+        mostrar(msg, "No se pudo conectar con el servicio", "error");
+      }
+    });
+
+    async function cargarMetricas() {
+      try {
+        const r = await fetch("/static/metricas.json");
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        const datos = await r.json();
+        const d = datos.datos;
+        $("metricasDatos").textContent =
+          "Filas: " + d.filas_cargadas.toLocaleString("es") + " · usuarios: " + d.usuarios.toLocaleString("es") +
+          " · items: " + d.items.toLocaleString("es") + " · train/test: " + d.train.toLocaleString("es") + "/" + d.test.toLocaleString("es") +
+          " · usuarios evaluados: " + d.usuarios_evaluados.toLocaleString("es") + " · positivos en test (rating ≥ 4): " + d.positivos_test.toLocaleString("es") + ".";
+        const tbody = $("tablaMetricas");
+        tbody.replaceChildren();
+        datos.modelos.forEach((m) => fila(tbody, [
+          m.nombre, m.tp.toLocaleString("es"), m.fp.toLocaleString("es"), m.fn.toLocaleString("es"),
+          m.accuracy.toFixed(6), m.precision.toFixed(6), m.recall.toFixed(6), m.f1.toFixed(6),
+          m.precision_at_5.toFixed(4), m.recall_at_5.toFixed(4),
+        ], [1, 2, 3, 4, 5, 6, 7, 8, 9]));
+        $("metricasFuente").textContent = "Fuente: " + datos.fuente + ". Candidatos evaluados: " + d.candidatos_evaluados.toLocaleString("es") + ". Accuracy alta por desbalance: casi todos los pares usuario-producto son negativos.";
+      } catch (e) {
+        $("metricasDatos").className = "error";
+        $("metricasDatos").textContent = "No se pudieron cargar las métricas (/static/metricas.json).";
+      }
+    }
+
+    async function cargarCarga() {
+      try {
+        const r = await fetch("/static/carga.json");
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        const datos = await r.json();
+        $("cargaEscenario").textContent = "Escenario: " + datos.escenario + ". Fuente: " + datos.fuente + ".";
+        const tbody = $("tablaCarga");
+        tbody.replaceChildren();
+        datos.tiempos_ms_y_rps.forEach((f) => fila(tbody, [
+          f.endpoint, f.peticiones, f.fallos, f.p50, f.p95, f.p99, f.req_s.toFixed(2),
+        ], [1, 2, 3, 4, 5, 6]));
+      } catch (e) {
+        $("cargaEscenario").className = "error";
+        $("cargaEscenario").textContent = "No se pudieron cargar las pruebas de carga (/static/carga.json).";
+      }
+    }
+
     cargarSalud();
+    setInterval(cargarSalud, 30000);
+    cargarMetricas();
+    cargarCarga();
   </script>
 </body>
 </html>

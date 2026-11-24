@@ -1,0 +1,9 @@
+{
+  "fuente": "tests/resultados_locust_stats.csv",
+  "escenario": "Locust, 20 usuarios, 30 s, con X-API-Key, RATE_LIMIT_POR_MINUTO=100000",
+  "tiempos_ms_y_rps": [
+    { "endpoint": "/recomendar", "peticiones": 787, "fallos": 0, "p50": 30, "p95": 160, "p99": 210, "req_s": 26.77 },
+    { "endpoint": "/interacciones", "peticiones": 169, "fallos": 0, "p50": 63, "p95": 220, "p99": 340, "req_s": 5.75 },
+    { "endpoint": "Agregado", "peticiones": 956, "fallos": 0, "p50": 36, "p95": 170, "p99": 220, "req_s": 32.52 }
+  ]
+}
