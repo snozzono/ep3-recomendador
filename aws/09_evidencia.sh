@@ -8,7 +8,6 @@ REGION=us-east-1
 BUCKET=ep2-equipo1-128688195152
 FN=ep3-recomendador
 API_NAME=ep3-recomendador-api
-API_URL=${API_URL:-https://b10f7xg6u4.execute-api.us-east-1.amazonaws.com/recomendar}
 USUARIO=${USUARIO:-AFNT6ZJCYQN3WDIKUSWHJDXNND2Q}
 API_KEY=${API_KEY:?Falta API_KEY (export API_KEY=...)}
 JOB=$(aws sagemaker list-training-jobs --region $REGION --name-contains ep3-svd \
@@ -37,6 +36,8 @@ echo "=== [5] API Gateway: APIs y rutas"
 API_ID=$(aws apigatewayv2 get-apis --region $REGION \
   --query "Items[?Name=='$API_NAME'].ApiId | [0]" --output text)
 echo "API_ID=$API_ID"
+API_URL=${API_URL:-https://$API_ID.execute-api.$REGION.amazonaws.com/recomendar}
+echo "API_URL=$API_URL"
 aws apigatewayv2 get-routes --region $REGION --api-id "$API_ID" \
   --query 'Items[].{Ruta:RouteKey,Auth:AuthorizationType}' --output table
 
