@@ -1,0 +1,34 @@
+Archivo: D:\mhigu\Desktop\clases\Arquitectura de sistemas IA 002D\material nota 3\EP3\datos\Industrial_and_Scientific.csv
+Filas cargadas: 412947
+Tras filtro: usuarios=50985, items=25848, interacciones=412947
+Split aleatorio 80/20 (semilla 42): train=330358, test=82589
+Usuarios evaluados (>=1 item relevante en test, rating>=4.0): 36454
+Positivos reales en test (rating>=4.0): 71052
+ALS numpy (aws/02_entrenar_sagemaker.py): k=32, reg=0.01, iteraciones=15, semilla=42, confianza = rating de train
+Entrenamiento ALS: 39.4 s
+
+== Definición ==
+Candidatos por usuario: items no vistos en train (todos los ítems del catálogo menos los de train).
+Predicción positiva: ítem en el top-5 de candidatos. Positivo real: ítem en test con rating>=4.0.
+Candidatos evaluados (suma sobre usuarios): 942019848
+Chequeo: positivos de test que ya estaban en train: 0 (debe ser 0)
+
+== Clasificación agregada: ALS ==
+TP=1836  FP=180434  FN=69216  TN=941768362  total=942019848
+Accuracy=0.999735
+Precision=0.010073
+Recall=0.025840
+F1=0.014495
+Precision@5=0.0101
+Recall@5 (media por usuario)=0.0269
+
+== Clasificación agregada: Popularidad ==
+TP=835  FP=181435  FN=70217  TN=941767361  total=942019848
+Accuracy=0.999733
+Precision=0.004581
+Recall=0.011752
+F1=0.006592
+Precision@5=0.0046
+Recall@5 (media por usuario)=0.0125
+
+Tiempo total: 84.3 s

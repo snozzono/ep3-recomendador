@@ -9,7 +9,7 @@ import mensajeria
 from consumidor import procesar
 from mensajeria import COLA, PublicadorRabbit
 
-EVENTO = {"usuario": 5, "producto": 11, "rating": 3, "timestamp": "2026-11-21T10:00:00Z"}
+EVENTO = {"usuario": "A3KF9", "producto": "B00DX7KEP8", "rating": 3, "timestamp": "2026-11-21T10:00:00Z"}
 
 
 def test_publicador_publica_json_en_cola_durable(monkeypatch):
@@ -42,11 +42,11 @@ def test_publicador_reintenta_una_vez_si_la_conexion_cae(monkeypatch):
 def test_consumidor_registra_evento_en_jsonl(tmp_path):
     ruta = tmp_path / "eventos.jsonl"
     procesar(json.dumps(EVENTO).encode(), ruta)
-    procesar(json.dumps({**EVENTO, "producto": 12}).encode(), ruta)
+    procesar(json.dumps({**EVENTO, "producto": "B098BR67DJ"}).encode(), ruta)
 
     lineas = ruta.read_text(encoding="utf-8").splitlines()
     assert len(lineas) == 2
-    assert json.loads(lineas[1])["producto"] == 12
+    assert json.loads(lineas[1])["producto"] == "B098BR67DJ"
 
 
 def test_consumidor_rechaza_mensaje_invalido_sin_escribir(tmp_path):

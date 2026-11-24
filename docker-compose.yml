@@ -17,6 +17,8 @@ services:
     environment:
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
       MODEL_PATH: /modelo/modelo.npz
+      API_KEY: ${API_KEY:-cambiar-esta-clave}
+      RATE_LIMIT_POR_MINUTO: ${RATE_LIMIT_POR_MINUTO:-60}
     volumes:
       - ./modelo:/modelo:ro
     depends_on:
