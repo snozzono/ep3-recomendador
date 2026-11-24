@@ -83,13 +83,24 @@ bash 05_rabbitmq_ec2.sh
 
 **Punto de control:** imprime `INSTANCE_ID` e `IP_PUBLICA`. Consola `http://<IP>:15672`, usuario `ep3`.
 
-## Paso 6 · Limpieza (al terminar cada sesión)
+## Paso 6 · Probar el broker (requiere paso 5)
 
-- Terminar la EC2 de RabbitMQ y borrar `ep3-rabbitmq-sg`.
-- `aws apigatewayv2 delete-api --api-id $API_ID`
-- `aws lambda delete-function --function-name ep3-recomendador`
-- Borrar el log group `/aws/lambda/ep3-recomendador`.
-- No borrar `datos/amazon-industrial/` mientras se trabaja.
+```bash
+export MI_IP=<tu IP pública>   # ya usada en paso 5, no cambia
+export RABBIT_PASS=<clave>
+bash 06_probar_rabbitmq.sh
+```
+
+**Punto de control:** `HTTP 15672 ... 200` y `AMQP publicar+leer: OK` con el mensaje de prueba. Si el HTTP da `000`, esperar 3-5 min a que Docker arranque.
+
+## Paso 7 · Limpieza (al terminar cada sesión)
+
+```bash
+CONFIRMAR=si bash 07_limpieza.sh
+```
+
+Borra: EC2 `ep3-rabbitmq`, security group `ep3-rabbitmq-sg`, API `ep3-recomendador-api`, Lambda `ep3-recomendador` y su log group. **No borra** el bucket, los datos ni los modelos en S3, ni los jobs de SageMaker (no generan costo).
+Verificación posterior: `bash 00_verificar.sh` debe marcar FALTA en Lambda y API.
 
 ## Notas
 
