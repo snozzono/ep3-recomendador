@@ -21,7 +21,7 @@ Entorno de la verificación: Windows, Python 3.12.10 (`.venv`), Docker 29.4.1. T
 | Docker · `/salud`, `/recomendar` sin clave / con clave | OK | 200 · 401 · 200 |
 | Docker · `POST /interacciones` (RabbitMQ arriba) | OK | 202 `{"estado":"aceptado"}` |
 | Docker · consumidor | OK | `Evento registrado: usuario=AFNT6ZJCYQN3WDIKUSWHJDXNND2Q producto=B00EP3TEST1 rating=5.0` |
-| Locust headless, 10 usuarios, 20 s (`RATE_LIMIT_POR_MINUTO=100000`) | OK | 246 peticiones, 0 fallos; p50 62 ms, p95 180 ms, p99 290 ms (agregado) |
+| Locust headless, 20 usuarios, 30 s (`RATE_LIMIT_POR_MINUTO=100000`) | OK | 956 peticiones, 0 fallos; `/recomendar` p50 30 ms, p95 160 ms, p99 210 ms (`tests/resultados_locust_stats.csv`) |
 | `docker compose down` | OK | 0 contenedores `ep3-*` activos |
 
 Modelo: el job de SageMaker `ep3-svd-2026-11-24-15-45-45-251` está `Completed`. La Lambda y la API de AWS se probaron en una sesión anterior (401 sin clave, 200 con clave, 404 usuario inexistente, 400 sin `usuario`); **no se volvieron a ejecutar el 24-11-2026**.

@@ -44,7 +44,7 @@ Respaldo: capturas en el informe (sección 6).
 
 ## Calidad, seguridad y límites (IE8, IE11)
 
-- **Pruebas:** 43 pruebas unitarias y de API aprobadas (incluye 401, 200, 429).
+- **Pruebas:** 47 pruebas unitarias y de API aprobadas (incluye 401, 200, 429).
 - **Carga (Locust, local, 20 usuarios, 30 s):** 956 peticiones, 0 fallos, p50 36 ms, p95 170 ms, p99 220 ms.
 - **Seguridad:** clave `X-API-Key` (comparación en tiempo constante), TLS en API Gateway.
 - **Límites:** la versión AWS no devuelve parámetro `n` y no tiene límite de tasa verificado. RabbitMQ no está en AWS para esta demo. Las cifras de carga son locales, no de AWS.

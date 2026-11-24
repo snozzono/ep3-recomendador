@@ -34,7 +34,7 @@
 ## Preguntas del docente (preparación)
 
 1. ¿Por qué Lambda y no un endpoint de SageMaker? Entrenamiento en SageMaker; inferencia en Lambda por costo y latencia en el laboratorio.
-2. ¿Cuál es el p95 de la API? Locust local (10 usuarios, 20 s): p95 180 ms; p50 62 ms; p99 290 ms. En AWS no se midió (pendiente, se declara).
+2. ¿Cuál es el p95 de la API? Locust local (20 usuarios, 30 s, límite de tasa subido solo para la prueba): `/recomendar` p50 30 ms, p95 160 ms, p99 210 ms. En AWS no se midió (pendiente, se declara).
 3. ¿Por qué P@5 es bajo? Densidad 0,031%; el modelo duplica a popularidad (0,0101 vs 0,0046).
 4. ¿El modelo excluye productos ya comprados? Sí, en la Lambda y en el servicio.
 5. ¿Cómo se protege la API? X-API-Key, rate limit 60/min, TLS en el borde.
